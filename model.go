@@ -29,7 +29,7 @@ type (
 )
 
 func newSymmetricSquareMatrix(size int) *symmetricSquareMatrix {
-    //As the matrix is square, it is only necessary to store the elements on or above the diagonal.
+    //As the matrix is symmetric, it is only necessary to store the elements on or above the diagonal.
     return &symmetricSquareMatrix {size, make([]float64, size * (size + 1) / 2)}
 }
 
