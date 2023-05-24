@@ -1,4 +1,4 @@
-#autoregression
+# autoregression
 This is a package for generating autoregressive models for sequential or timeseries data.
 
 ## `NewModelOLS(data []float64, order int) (*ARModel, error)`
