@@ -15,9 +15,9 @@ var (
 
 type (
     ARModel struct {
-        coefficients []float64
-        noise float64
-        standardError float64
+        Coefficients []float64 `json:"coefficients"`
+        Noise float64 `json:"noise"`
+        StandardError float64 `json:"standardError"`
     }
     
     symmetricSquareMatrix struct {
@@ -54,20 +54,16 @@ func (m *symmetricSquareMatrix) setElement(r, c int, value float64) {
 }
 
 func (model *ARModel) Order() int {
-    return len(model.coefficients)
-}
-
-func (model *ARModel) StandardError() float64 {
-    return model.standardError
+    return len(model.Coefficients)
 }
 
 func (model *ARModel) Predict(newData []float64) (float64, error) {
-    if len(newData) != len(model.coefficients) {
+    if len(newData) != len(model.Coefficients) {
         return 0, ErrIncorrectDataLength
     }
-    prediction := model.noise
+    prediction := model.Noise
     for dataIndex, dataValue := range newData {
-        prediction += model.coefficients[len(model.coefficients) - 1 - dataIndex] * dataValue
+        prediction += model.Coefficients[len(model.Coefficients) - 1 - dataIndex] * dataValue
     }
     return prediction, nil
 }

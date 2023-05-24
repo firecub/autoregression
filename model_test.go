@@ -21,19 +21,19 @@ func TestNewModelOLS(t *testing.T) {
     }
     expectedCoefficients := []float64{- float64(515) / float64(10302), - float64(1525) / float64(10302)}
     expectedNoise := - float64(31) / float64(202)
-    if model.coefficients == nil {
+    if model.Coefficients == nil {
         t.Errorf("Excpected coefficients %v but got nil", expectedCoefficients)
     }
-    if len(model.coefficients) != len(expectedCoefficients) {
-        t.Errorf("Excpected coefficients %v but got %v", expectedCoefficients, model.coefficients)
+    if len(model.Coefficients) != len(expectedCoefficients) {
+        t.Errorf("Excpected coefficients %v but got %v", expectedCoefficients, model.Coefficients)
     }
     for index, value := range expectedCoefficients {
-        if !floatsAreClose(value, model.coefficients[index], floatTolerance) {
-            t.Errorf("Coefficient %d should be %.12f but is %.12f.", index, value, model.coefficients[index])
+        if !floatsAreClose(value, model.Coefficients[index], floatTolerance) {
+            t.Errorf("Coefficient %d should be %.12f but is %.12f.", index, value, model.Coefficients[index])
         }
     }
-    if !floatsAreClose(model.noise, expectedNoise, floatTolerance) {
-        t.Errorf("Expected noise of %.12f but got noise of %.12f.", expectedNoise, model.noise)
+    if !floatsAreClose(model.Noise, expectedNoise, floatTolerance) {
+        t.Errorf("Expected noise of %.12f but got noise of %.12f.", expectedNoise, model.Noise)
     }
     var expectedErrorVariance float64 = 0
     iterations := len(data) - order
@@ -46,8 +46,8 @@ func TestNewModelOLS(t *testing.T) {
         expectedErrorVariance += predictionError * predictionError / float64(iterations)
     }
     expectedStandardError := math.Sqrt(expectedErrorVariance)
-    if !floatsAreClose(model.StandardError(), expectedStandardError, floatTolerance) {
-        t.Errorf("Expected standard error of %.12f but got standard error of %.12f.", expectedStandardError, model.StandardError())
+    if !floatsAreClose(model.StandardError, expectedStandardError, floatTolerance) {
+        t.Errorf("Expected standard error of %.12f but got standard error of %.12f.", expectedStandardError, model.StandardError)
     }
 }
 
@@ -85,9 +85,9 @@ func TestModelPrediction(t *testing.T) {
     if model == nil {
         t.Fatal("Expected a model but got nil.")
     }
-    expectedPredicion := model.noise
+    expectedPredicion := model.Noise
     newData := []float64{66, 88}
-    for coeffIndex, coeff := range model.coefficients {
+    for coeffIndex, coeff := range model.Coefficients {
         expectedPredicion += newData[len(newData) - 1 - coeffIndex] * coeff
     }
     actualPrediction, predictionErr := model.Predict(newData)
@@ -109,7 +109,7 @@ func TestModelPredictionWithZeroOrder(t *testing.T) {
     if model == nil {
         t.Fatal("Expected a model but got nil.")
     }
-    expectedPredicion := model.noise
+    expectedPredicion := model.Noise
     newData := []float64{}
     actualPrediction, predictionErr := model.Predict(newData)
     if predictionErr != nil {

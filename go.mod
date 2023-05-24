@@ -1,4 +1,4 @@
-module github.com/firecub/atoregression
+module github.com/firecub/autoregression
 
 go 1.20
 
