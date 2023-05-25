@@ -1,7 +1,9 @@
 package autoregression
 
 import (
+    "encoding/json"
     "math"
+    "reflect"
     "testing"
 )
 
@@ -21,19 +23,19 @@ func TestNewModelOLS(t *testing.T) {
     }
     expectedCoefficients := []float64{- float64(515) / float64(10302), - float64(1525) / float64(10302)}
     expectedNoise := - float64(31) / float64(202)
-    if model.Coefficients == nil {
+    if model.coefficients == nil {
         t.Errorf("Excpected coefficients %v but got nil", expectedCoefficients)
     }
-    if len(model.Coefficients) != len(expectedCoefficients) {
-        t.Errorf("Excpected coefficients %v but got %v", expectedCoefficients, model.Coefficients)
+    if len(model.coefficients) != len(expectedCoefficients) {
+        t.Errorf("Excpected coefficients %v but got %v", expectedCoefficients, model.coefficients)
     }
     for index, value := range expectedCoefficients {
-        if !floatsAreClose(value, model.Coefficients[index], floatTolerance) {
-            t.Errorf("Coefficient %d should be %.12f but is %.12f.", index, value, model.Coefficients[index])
+        if !floatsAreClose(value, model.coefficients[index], floatTolerance) {
+            t.Errorf("Coefficient %d should be %.12f but is %.12f.", index, value, model.coefficients[index])
         }
     }
-    if !floatsAreClose(model.Noise, expectedNoise, floatTolerance) {
-        t.Errorf("Expected noise of %.12f but got noise of %.12f.", expectedNoise, model.Noise)
+    if !floatsAreClose(model.noise, expectedNoise, floatTolerance) {
+        t.Errorf("Expected noise of %.12f but got noise of %.12f.", expectedNoise, model.noise)
     }
     var expectedErrorVariance float64 = 0
     iterations := len(data) - order
@@ -46,8 +48,8 @@ func TestNewModelOLS(t *testing.T) {
         expectedErrorVariance += predictionError * predictionError / float64(iterations)
     }
     expectedStandardError := math.Sqrt(expectedErrorVariance)
-    if !floatsAreClose(model.StandardError, expectedStandardError, floatTolerance) {
-        t.Errorf("Expected standard error of %.12f but got standard error of %.12f.", expectedStandardError, model.StandardError)
+    if !floatsAreClose(model.StandardError(), expectedStandardError, floatTolerance) {
+        t.Errorf("Expected standard error of %.12f but got standard error of %.12f.", expectedStandardError, model.StandardError())
     }
 }
 
@@ -85,9 +87,9 @@ func TestModelPrediction(t *testing.T) {
     if model == nil {
         t.Fatal("Expected a model but got nil.")
     }
-    expectedPredicion := model.Noise
+    expectedPredicion := model.noise
     newData := []float64{66, 88}
-    for coeffIndex, coeff := range model.Coefficients {
+    for coeffIndex, coeff := range model.coefficients {
         expectedPredicion += newData[len(newData) - 1 - coeffIndex] * coeff
     }
     actualPrediction, predictionErr := model.Predict(newData)
@@ -109,7 +111,7 @@ func TestModelPredictionWithZeroOrder(t *testing.T) {
     if model == nil {
         t.Fatal("Expected a model but got nil.")
     }
-    expectedPredicion := model.Noise
+    expectedPredicion := model.noise
     newData := []float64{}
     actualPrediction, predictionErr := model.Predict(newData)
     if predictionErr != nil {
@@ -117,6 +119,25 @@ func TestModelPredictionWithZeroOrder(t *testing.T) {
     }
     if !floatsAreClose(expectedPredicion, actualPrediction, floatTolerance) {
         t.Errorf("Expected predicion of %.12f but got %.12f.", expectedPredicion, actualPrediction)
+    }
+}
+
+func TestJsonEncoding(t *testing.T) {
+    firstModel := ARModel{coefficients: []float64{-0.5916191048362872,0.49113848002403127},
+                          noise: -4.069465304896365,
+                          standardError: 0.8622559253870782,
+    }
+    jsonBytes, marshalErr := json.Marshal(&firstModel)
+    if marshalErr != nil {
+        t.Fatalf("Error marshalling model to JSON: %v.\n", marshalErr)
+    }
+    var modelFromJson ARModel
+    unmarshalErr := json.Unmarshal(jsonBytes, &modelFromJson)
+    if unmarshalErr != nil {
+        t.Fatalf("Error unmarshalling JSON to ARModel: %v.\n", unmarshalErr)
+    }
+    if !reflect.DeepEqual(modelFromJson, firstModel) {
+        t.Errorf("Unmarshalled JSON differs from model. Expected %v but got %v.\n", firstModel, modelFromJson)
     }
 }
 

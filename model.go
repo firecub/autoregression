@@ -2,6 +2,7 @@ package autoregression
 
 import (
     "errors"
+    "encoding/json"
     "gonum.org/v1/gonum/mat"
     "math"
 )
@@ -15,9 +16,9 @@ var (
 
 type (
     ARModel struct {
-        Coefficients []float64 `json:"coefficients"`
-        Noise float64 `json:"noise"`
-        StandardError float64 `json:"standardError"`
+        coefficients []float64
+        noise float64
+        standardError float64
     }
     
     symmetricSquareMatrix struct {
@@ -26,6 +27,12 @@ type (
     }
     
     vector []float64
+
+    encodedExportType struct {
+        Coefficients []float64 `json:"coefficients"`
+        Noise float64 `json:"noise"`
+        StandardError float64 `json:"standardError"`
+    }
 )
 
 func newSymmetricSquareMatrix(size int) *symmetricSquareMatrix {
@@ -54,18 +61,44 @@ func (m *symmetricSquareMatrix) setElement(r, c int, value float64) {
 }
 
 func (model *ARModel) Order() int {
-    return len(model.Coefficients)
+    return len(model.coefficients)
 }
 
 func (model *ARModel) Predict(newData []float64) (float64, error) {
-    if len(newData) != len(model.Coefficients) {
+    if len(newData) != len(model.coefficients) {
         return 0, ErrIncorrectDataLength
     }
-    prediction := model.Noise
+    prediction := model.noise
     for dataIndex, dataValue := range newData {
-        prediction += model.Coefficients[len(model.Coefficients) - 1 - dataIndex] * dataValue
+        prediction += model.coefficients[len(model.coefficients) - 1 - dataIndex] * dataValue
     }
     return prediction, nil
+}
+
+func (model *ARModel) StandardError() float64 {
+    return model.standardError
+}
+
+func (model *ARModel) MarshalJSON() ([]byte, error) {
+    return json.Marshal(
+        encodedExportType {
+            Coefficients: model.coefficients,
+            Noise: model.noise,
+            StandardError: model.standardError,
+        })
+}
+
+func (model *ARModel) UnmarshalJSON(jsonData []byte) error {
+    var encoding encodedExportType
+    unmarshallErr := json.Unmarshal(jsonData, &encoding)
+    if unmarshallErr == nil {
+        *model = ARModel {
+            coefficients: encoding.Coefficients,
+            noise: encoding.Noise,
+            standardError: encoding.StandardError,
+        }
+    }
+    return unmarshallErr
 }
 
 func (v vector) Dims() (int, int) {
